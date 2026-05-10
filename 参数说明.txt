@@ -1,0 +1,21 @@
+JSON解析失败: unexpected end of JSON input
+概念板块不更新
+右键单击股票名称加入同花顺自选
+
+修改，先生成analyz_panq_pre.txt,然后再对analyz_panq_pre.txt做清洗生成analyz_panq.txt：1.生成的analyz_panq.txt文件中不要含[citation:《boards_tidui_30》5月8日数据]、来源：boards_tidui_30 5月8日数据、boards_tidui_30、citation:《overnight_pre_news》、overnight_pre_news、citation:《pqian-wechat.txt》等来源说明。
+
+B554-F16A
+
+EMAIL_FROM：ashare_ldragon@163.com
+EMAIL_PASSWORD:fdsa1234
+EMAIL_TO:tangsong_001@163.com
+
+S3_ENDPOINT_URL:https://6b290eca300719d51573989a447d922d.r2.cloudflarestorage.com
+S3_BUCKET_NAME:trendradar
+S3_ACCESS_KEY_ID:6088f3b75086727c179d60be902691de
+S3_SECRET_ACCESS_KEY:d3d096cb8099977109db85d88e645370a9e5d1fd646c600bf907a98afed7d1a3
+
+email 授权码：XYuz4SNUMd3Zej4k
+
+glm api key:4041579900a84618a0618856b35496b2.ScDj9HD085uNteYZ
+GLM-4-Flash
