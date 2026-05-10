@@ -26,6 +26,7 @@ from email.utils import formataddr, formatdate, make_msgid
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 from urllib.parse import urlparse
+from html.parser import HTMLParser
 
 import requests
 
@@ -743,6 +744,10 @@ TrendRadar 热点分析报告
             server.quit()
 
             print(f"邮件发送成功 [{report_type}] -> {to_email}")
+            
+            # 保存邮件内容到 docx 文件
+            save_email_to_docx(html_content, report_type, now)
+            
             return True
 
         except smtplib.SMTPServerDisconnected:
@@ -771,6 +776,102 @@ TrendRadar 热点分析报告
         import traceback
         traceback.print_exc()
         return False
+
+
+class HTMLToTextParser(HTMLParser):
+    """HTML 转纯文本解析器"""
+    def __init__(self):
+        super().__init__()
+        self.text = []
+        self.in_link = False
+        self.link_href = ""
+    
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            self.in_link = True
+            for attr, value in attrs:
+                if attr == 'href':
+                    self.link_href = value
+        elif tag in ['br', 'p', 'div', 'tr']:
+            self.text.append('\n')
+        elif tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+            self.text.append('\n\n')
+    
+    def handle_endtag(self, tag):
+        if tag == 'a':
+            if self.in_link and self.link_href:
+                self.text.append(f" ({self.link_href})")
+                self.link_href = ""
+            self.in_link = False
+        elif tag == 'li':
+            self.text.append('\n')
+    
+    def handle_data(self, data):
+        self.text.append(data)
+    
+    def get_text(self):
+        result = ''.join(self.text)
+        # 清理多余的换行
+        while '\n\n\n' in result:
+            result = result.replace('\n\n\n', '\n\n')
+        return result.strip()
+
+
+def save_email_to_docx(html_content: str, report_type: str, now: datetime):
+    """
+    将邮件内容保存到 docx 文件
+    
+    Args:
+        html_content: HTML 内容
+        report_type: 报告类型
+        now: 当前时间
+    """
+    try:
+        from docx import Document
+        from docx.shared import Pt
+        from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+        
+        # 创建文档
+        doc = Document()
+        
+        # 设置标题
+        title = f"TrendRadar 热点分析报告 - {report_type}"
+        title_paragraph = doc.add_heading(title, level=1)
+        title_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        
+        # 添加生成时间
+        time_text = f"生成时间：{now.strftime('%Y年%m月%d日 %H:%M:%S')}"
+        doc.add_paragraph(time_text)
+        
+        doc.add_paragraph()
+        
+        # 解析 HTML 内容
+        parser = HTMLToTextParser()
+        parser.feed(html_content)
+        plain_text = parser.get_text()
+        
+        # 添加正文
+        paragraph = doc.add_paragraph(plain_text)
+        paragraph.style.font.size = Pt(10.5)
+        
+        # 设置保存路径
+        output_dir = Path("output/news")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 生成文件名：hotnews_日期_时间.docx
+        filename = f"hotnews_{now.strftime('%Y%m%d_%H%M%S')}.docx"
+        file_path = output_dir / filename
+        
+        # 保存文档
+        doc.save(file_path)
+        print(f"邮件内容已保存到 docx 文件：{file_path}")
+        
+    except ImportError:
+        print("警告：python-docx 模块未安装，无法保存 docx 文件")
+    except Exception as e:
+        print(f"保存 docx 文件失败：{e}")
+        import traceback
+        traceback.print_exc()
 
 
 def send_to_ntfy(
